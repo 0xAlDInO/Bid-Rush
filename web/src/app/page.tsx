@@ -131,8 +131,18 @@ function Dashboard() {
   // 1. Auto-register user in DB immediately upon login & Sync user data
   useEffect(() => {
     if (authenticated && user) {
-      const userEmail = user.email?.address || '';
-      if (userEmail) setEmail(userEmail);
+      // Extract user email from Privy user or linked accounts
+      const autoEmail =
+        user.email?.address ||
+        (user as any).google?.email ||
+        (user as any).apple?.email ||
+        (user.linkedAccounts?.find((acc: any) => acc.type === 'email' && acc.address) as any)?.address ||
+        (user.linkedAccounts?.find((acc: any) => acc.email) as any)?.email ||
+        '';
+
+      if (autoEmail) {
+        setEmail(autoEmail);
+      }
 
       // Auto-save or fetch user in DB
       fetch('/api/user', {
@@ -140,7 +150,7 @@ function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           privyDid: user.id,
-          email: userEmail || null,
+          email: autoEmail || null,
           firstName: null,
           lastName: null,
           walletAddress: walletAddress || null,
@@ -187,12 +197,18 @@ function Dashboard() {
     setSaving(true);
     setSaveSuccessMsg('');
     try {
+      const autoEmail =
+        email ||
+        user.email?.address ||
+        (user as any).google?.email ||
+        (user.linkedAccounts?.find((acc: any) => acc.email) as any)?.email;
+
       const res = await fetch('/api/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           privyDid: user.id,
-          email: email || user.email?.address,
+          email: autoEmail || null,
           firstName,
           lastName,
           walletAddress: walletAddress || null,
