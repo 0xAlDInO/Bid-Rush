@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePrivy, useWallets, useCreateWallet } from '@privy-io/react-auth';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { config } from '@/config';
 
 function Dashboard() {
   const { authenticated, user, logout } = usePrivy();
@@ -21,11 +22,11 @@ function Dashboard() {
   const solanaWallet = wallets?.find((w) => w.walletClientType === 'solana') || user?.wallet;
   const walletAddress = solanaWallet?.address;
 
-  // Fetch Solana Devnet Balance
+  // Fetch Solana Devnet Balance using global RPC URL
   const fetchBalance = useCallback(async (address: string) => {
     setLoadingBalance(true);
     try {
-      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      const connection = new Connection(config.solana.rpcUrl, 'confirmed');
       const pubKey = new PublicKey(address);
       const balanceLamports = await connection.getBalance(pubKey);
       setSolBalance(balanceLamports / LAMPORTS_PER_SOL);
@@ -104,8 +105,8 @@ function Dashboard() {
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-slate-100">Portefeuille Solana</h2>
-            <span className="px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold rounded-full">
-              Solana Devnet
+            <span className="px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold uppercase rounded-full">
+              Solana {config.solana.cluster}
             </span>
           </div>
 
@@ -156,7 +157,7 @@ function Dashboard() {
               🔄 Rafraîchir le solde
             </button>
             <a
-              href={`https://explorer.solana.com/address/${walletAddress}?cluster=devnet`}
+              href={`https://explorer.solana.com/address/${walletAddress}?cluster=${config.solana.cluster}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-400 hover:text-slate-200 underline"
@@ -248,8 +249,6 @@ function Dashboard() {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-  const isInvalidAppId = !appId || appId === 'your-privy-app-id';
 
   useEffect(() => {
     setMounted(true);
@@ -265,7 +264,7 @@ export default function Home() {
     );
   }
 
-  if (isInvalidAppId) {
+  if (config.privy.isDummyAppId) {
     return (
       <main className="max-w-4xl mx-auto px-4 py-12">
         <header className="flex justify-between items-center mb-12 pb-6 border-b border-slate-800">
@@ -343,7 +342,7 @@ function HomeContent() {
         <section className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center backdrop-blur-sm">
           <h2 className="text-2xl font-bold mb-4">Bienvenue sur Bid-Rush</h2>
           <p className="text-slate-400 max-w-lg mx-auto mb-8">
-            Connectez-vous pour générer votre portefeuille Solana sécurisé via Privy (email, Google, Twitter, SMS ou Wallet) et accéder à vos fonds sur le réseau Solana Devnet.
+            Connectez-vous pour générer votre portefeuille Solana sécurisé via Privy (email, Google, Twitter, SMS ou Wallet) et accéder à vos fonds sur le réseau Solana {config.solana.cluster}.
           </p>
           <button
             onClick={login}

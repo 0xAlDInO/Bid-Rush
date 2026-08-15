@@ -3,22 +3,20 @@
 import React from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
+import { config } from '@/config';
 
 const solanaConnectors = toSolanaWalletConnectors({
   shouldAutoConnect: true,
 });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || '';
-  const isInvalidAppId = !appId || appId === 'your-privy-app-id';
-
-  if (isInvalidAppId) {
+  if (config.privy.isDummyAppId) {
     return <>{children}</>;
   }
 
   return (
     <PrivyProvider
-      appId={appId}
+      appId={config.privy.appId}
       config={{
         appearance: {
           theme: 'dark',

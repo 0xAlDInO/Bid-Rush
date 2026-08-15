@@ -1,7 +1,8 @@
 import { Pool } from 'pg';
+import { config } from '@/config';
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/bidrush_db',
+  connectionString: config.db.url,
 });
 
 export default pool;
