@@ -37,6 +37,8 @@ function Dashboard() {
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [requestingAirdrop, setRequestingAirdrop] = useState(false);
+  const [airdropMsg, setAirdropMsg] = useState<string | null>(null);
 
   // Withdrawal form states
   const [recipientAddress, setRecipientAddress] = useState('');
@@ -77,6 +79,26 @@ function Dashboard() {
       setLoadingBalance(false);
     }
   }, []);
+
+  // Request Devnet SOL Airdrop
+  const handleRequestAirdrop = async () => {
+    if (!walletAddress) return;
+    setRequestingAirdrop(true);
+    setAirdropMsg(null);
+    try {
+      const connection = new Connection(config.solana.rpcUrl, 'confirmed');
+      const pubKey = new PublicKey(walletAddress);
+      const signature = await connection.requestAirdrop(pubKey, 1 * LAMPORTS_PER_SOL);
+      await connection.confirmTransaction(signature, 'confirmed');
+      setAirdropMsg('✓ 1 SOL gratuit a été crédité sur votre portefeuille Devnet !');
+      fetchBalance(walletAddress);
+    } catch (err: any) {
+      console.error('Airdrop error:', err);
+      setAirdropMsg('⚠️ Limite d\'airdrop atteinte ou réseau occupé. Veuillez réessayer dans quelques instants.');
+    } finally {
+      setRequestingAirdrop(false);
+    }
+  };
 
   // Fetch Withdrawals History
   const fetchWithdrawalsHistory = useCallback(async (privyDid: string) => {
@@ -226,18 +248,20 @@ function Dashboard() {
       transaction.feePayer = fromPubKey;
 
       let txSig = '';
+      const targetChain = config.solana.cluster === 'devnet' ? 'solana:devnet' : 'solana:mainnet';
 
       // Check if wallet implements sendTransaction
       if ('sendTransaction' in activeSolanaWallet && typeof (activeSolanaWallet as any).sendTransaction === 'function') {
         const result = await (activeSolanaWallet as any).sendTransaction(transaction, connection);
         txSig = typeof result === 'string' ? result : result?.signature || '';
       } else if (solanaWallets && solanaWallets.length > 0) {
-        // Use Privy Solana hook signAndSendTransaction
+        // Use Privy Solana hook signAndSendTransaction specifying devnet chain
         const serialized = transaction.serialize({ requireAllSignatures: false, verifySignatures: false });
         const solWallet = solanaWallets.find((w) => w.address === walletAddress) || solanaWallets[0];
         const res = await signAndSendTransaction({
           transaction: serialized,
           wallet: solWallet,
+          chain: targetChain,
         });
         txSig = Buffer.from(res.signature).toString('hex');
       } else {
@@ -279,10 +303,18 @@ function Dashboard() {
       if (user) fetchWithdrawalsHistory(user.id);
     } catch (err: any) {
       console.error('Erreur lors du retrait:', err);
-      setWithdrawMessage({
-        type: 'error',
-        text: err?.message || 'Le retrait a échoué. Veuillez vérifier les détails et réessayer.',
-      });
+      const errStr = String(err?.message || err);
+      if (errStr.includes('Attempt to debit an account') || errStr.includes('no record of a prior credit')) {
+        setWithdrawMessage({
+          type: 'error',
+          text: 'Votre portefeuille a un solde de 0 SOL sur Devnet. Cliquez sur "Obtenir 1 SOL (Devnet)" ci-dessus pour le créditer gratuitement avant de tester le retrait.',
+        });
+      } else {
+        setWithdrawMessage({
+          type: 'error',
+          text: err?.message || 'Le retrait a échoué. Veuillez vérifier les détails et réessayer.',
+        });
+      }
     } finally {
       setWithdrawing(false);
     }
@@ -318,15 +350,29 @@ function Dashboard() {
                 </div>
 
                 <div className="p-4 bg-gradient-to-br from-indigo-950/40 to-slate-950 border border-indigo-900/40 rounded-xl">
-                  <label className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
-                    Solde disponible
-                  </label>
+                  <div className="flex justify-between items-baseline">
+                    <label className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                      Solde disponible
+                    </label>
+                    <button
+                      onClick={handleRequestAirdrop}
+                      disabled={requestingAirdrop}
+                      className="text-xs bg-indigo-600/80 hover:bg-indigo-500 text-white font-medium px-2.5 py-1 rounded-lg transition disabled:opacity-50"
+                    >
+                      {requestingAirdrop ? 'Crédit...' : 'Obtenir 1 SOL (Devnet)'}
+                    </button>
+                  </div>
                   <div className="mt-2 flex items-baseline gap-2">
                     <span className="text-3xl font-extrabold text-white">
                       {loadingBalance ? '...' : solBalance !== null ? solBalance.toFixed(4) : '0.0000'}
                     </span>
                     <span className="text-indigo-400 font-bold">SOL</span>
                   </div>
+                  {airdropMsg && (
+                    <p className="mt-2 text-xs text-indigo-300 bg-indigo-950/50 p-2 rounded-lg">
+                      {airdropMsg}
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (
