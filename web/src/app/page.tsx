@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePrivy, useWallets as useEvmWallets, useCreateWallet } from '@privy-io/react-auth';
-import { useWallets as useSolanaWallets, useSignAndSendTransaction } from '@privy-io/react-auth/solana';
+import { useWallets as useSolanaWallets, useSignTransaction } from '@privy-io/react-auth/solana';
 import {
   Connection,
   PublicKey,
@@ -25,7 +25,7 @@ function Dashboard() {
   const { wallets: evmWallets } = useEvmWallets();
   const { wallets: solanaWallets } = useSolanaWallets();
   const { createWallet } = useCreateWallet();
-  const { signAndSendTransaction } = useSignAndSendTransaction();
+  const { signTransaction } = useSignTransaction();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -89,8 +89,23 @@ function Dashboard() {
       const connection = new Connection(config.solana.rpcUrl, 'confirmed');
       const pubKey = new PublicKey(walletAddress);
       const signature = await connection.requestAirdrop(pubKey, 1 * LAMPORTS_PER_SOL);
-      await connection.confirmTransaction(signature, 'confirmed');
-      setAirdropMsg('✓ 1 SOL gratuit a été crédité sur votre portefeuille Devnet !');
+
+      // Poll for transaction confirmation over HTTP (bypassing WebSocket failures)
+      let confirmed = false;
+      for (let i = 0; i < 30; i++) {
+        await new Promise((r) => setTimeout(r, 1000));
+        const status = await connection.getSignatureStatus(signature);
+        if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
+          confirmed = true;
+          break;
+        }
+      }
+
+      if (confirmed) {
+        setAirdropMsg('✓ 1 SOL gratuit a été crédité sur votre portefeuille Devnet !');
+      } else {
+        setAirdropMsg('✓ Airdrop envoyé ! Mise à jour du solde en cours...');
+      }
       fetchBalance(walletAddress);
     } catch (err: any) {
       console.error('Airdrop error:', err);
@@ -197,7 +212,7 @@ function Dashboard() {
     }
   };
 
-  // Process SOL Withdrawal
+  // Process SOL Withdrawal via HTTP broadcast to prevent WebSocket connection errors
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     setWithdrawMessage(null);
@@ -250,30 +265,39 @@ function Dashboard() {
       let txSig = '';
       const targetChain = config.solana.cluster === 'devnet' ? 'solana:devnet' : 'solana:mainnet';
 
-      // Check if wallet implements sendTransaction
-      if ('sendTransaction' in activeSolanaWallet && typeof (activeSolanaWallet as any).sendTransaction === 'function') {
-        const result = await (activeSolanaWallet as any).sendTransaction(transaction, connection);
-        txSig = typeof result === 'string' ? result : result?.signature || '';
-      } else if (solanaWallets && solanaWallets.length > 0) {
-        // Use Privy Solana hook signAndSendTransaction specifying devnet chain
+      // 1. Sign transaction using Privy
+      let signedBytes: Uint8Array | null = null;
+
+      if (solanaWallets && solanaWallets.length > 0) {
         const serialized = transaction.serialize({ requireAllSignatures: false, verifySignatures: false });
         const solWallet = solanaWallets.find((w) => w.address === walletAddress) || solanaWallets[0];
-        const res = await signAndSendTransaction({
+        const res = await signTransaction({
           transaction: serialized,
           wallet: solWallet,
           chain: targetChain,
         });
-        txSig = Buffer.from(res.signature).toString('hex');
-      } else {
-        const provider = await (activeSolanaWallet as any).getProvider?.();
-        if (provider && typeof provider.request === 'function') {
-          const response = await provider.request({
-            method: 'signAndSendTransaction',
-            params: { transaction },
-          });
-          txSig = response?.signature || response;
-        } else {
-          throw new Error('Impossible de signer la transaction avec ce portefeuille.');
+        signedBytes = res.signedTransaction;
+      } else if ('sendTransaction' in activeSolanaWallet && typeof (activeSolanaWallet as any).sendTransaction === 'function') {
+        const result = await (activeSolanaWallet as any).sendTransaction(transaction, connection);
+        txSig = typeof result === 'string' ? result : result?.signature || '';
+      }
+
+      // 2. Broadcast via HTTP RPC if signed bytes are available
+      if (signedBytes && !txSig) {
+        txSig = await connection.sendRawTransaction(signedBytes, {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+        });
+      }
+
+      // 3. Poll for transaction confirmation using HTTP (avoids WebSocket CORS/WSS errors)
+      if (txSig) {
+        for (let i = 0; i < 20; i++) {
+          await new Promise((r) => setTimeout(r, 1000));
+          const status = await connection.getSignatureStatus(txSig);
+          if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
+            break;
+          }
         }
       }
 
