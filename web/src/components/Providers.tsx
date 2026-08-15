@@ -23,7 +23,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           accentColor: '#676FFF',
           showWalletLoginFirst: true,
         },
-        loginMethods: ['email', 'wallet', 'google', 'twitter', 'discord', 'apple', 'sms'],
+        loginMethods: ['email', 'wallet'],
         embeddedWallets: {
           ethereum: {
             createOnLogin: 'off',

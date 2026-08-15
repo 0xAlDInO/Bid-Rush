@@ -48,6 +48,23 @@ NEXT_PUBLIC_SOLANA_CLUSTER=devnet
 
 ---
 
+## 🔐 Activation des Méthodes de Connexion Privy (Social Logins)
+
+Dans `web/src/components/Providers.tsx`, les méthodes de connexion configurées sont par défaut `['email', 'wallet']`.
+
+Si vous souhaitez activer les connexions réseaux sociaux (Google, Twitter, Discord, Apple, SMS) :
+1. Rendez-vous sur votre [Dashboard Privy](https://dashboard.privy.io/).
+2. Allez dans **Authentication** -> **Login Methods**.
+3. Activez la méthode souhaitée (ex: Google OAuth) et renseignez vos identifiants OAuth.
+4. Ajoutez la méthode dans le tableau `loginMethods` dans `web/src/components/Providers.tsx` :
+   ```typescript
+   loginMethods: ['email', 'wallet', 'google', 'twitter', 'discord']
+   ```
+
+> **Attention :** Si une méthode sociale (ex: `google`) est présente dans le code mais non activée dans votre Dashboard Privy, Privy renverra une erreur HTTP 403 (*"Login with Google not allowed"*).
+
+---
+
 ## 🌐 Fichier de Configuration Global (`web/src/config/index.ts`)
 
 Toutes les variables d'environnement, URLs de RPC et paramètres de base de données sont centralisés et exportés dans le module global `web/src/config/index.ts` :
