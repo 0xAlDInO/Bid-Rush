@@ -72,6 +72,11 @@ L'application enregistre les identités nominales des utilisateurs associés à 
 Le script SQL d'initialisation se trouve sous `database/schema.sql` :
 
 ```sql
+-- Assurance des permissions sur le schéma public (PostgreSQL 15+)
+CREATE SCHEMA IF NOT EXISTS public;
+GRANT ALL ON SCHEMA public TO CURRENT_USER;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     privy_did VARCHAR(255) UNIQUE NOT NULL,
@@ -86,6 +91,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_privy_did ON users(privy_did);
 CREATE INDEX IF NOT EXISTS idx_users_wallet_address ON users(wallet_address);
 ```
+
+> **Note de Dépannage (PostgreSQL 15+) :** Si vous rencontrez l'erreur `ERROR: permission denied for schema public`, exécuter l'instruction `GRANT ALL ON SCHEMA public TO PUBLIC;` ou `GRANT ALL ON SCHEMA public TO votre_utilisateur;` résoudra l'accès aux permissions du schéma `public`.
 
 ---
 

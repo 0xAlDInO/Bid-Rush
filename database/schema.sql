@@ -1,6 +1,10 @@
 -- Schema PostgreSQL pour la base de données Bid-Rush
--- Table des utilisateurs (données nominales)
+-- Assurance des permissions sur le schéma public (PostgreSQL 15+)
+CREATE SCHEMA IF NOT EXISTS public;
+GRANT ALL ON SCHEMA public TO CURRENT_USER;
+GRANT ALL ON SCHEMA public TO PUBLIC;
 
+-- Table des utilisateurs (données nominales)
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     privy_did VARCHAR(255) UNIQUE NOT NULL,
