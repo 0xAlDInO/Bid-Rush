@@ -14,21 +14,27 @@ export async function POST(request: Request) {
       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
       ON CONFLICT (privy_did)
       DO UPDATE SET
-        email = COALESCE(EXCLUDED.email, users.email),
-        first_name = COALESCE(EXCLUDED.first_name, users.first_name),
-        last_name = COALESCE(EXCLUDED.last_name, users.last_name),
-        wallet_address = COALESCE(EXCLUDED.wallet_address, users.wallet_address),
+        email = COALESCE($2, users.email),
+        first_name = COALESCE($3, users.first_name),
+        last_name = COALESCE($4, users.last_name),
+        wallet_address = COALESCE($5, users.wallet_address),
         updated_at = CURRENT_TIMESTAMP
       RETURNING *;
     `;
 
-    const values = [privyDid, email || null, firstName || null, lastName || null, walletAddress || null];
+    const values = [
+      privyDid,
+      email !== undefined && email !== '' ? email : null,
+      firstName !== undefined && firstName !== '' ? firstName : null,
+      lastName !== undefined && lastName !== '' ? lastName : null,
+      walletAddress !== undefined && walletAddress !== '' ? walletAddress : null
+    ];
+
     const res = await pool.query(query, values);
 
     return NextResponse.json({ success: true, user: res.rows[0] });
   } catch (error: any) {
     console.error('Database Error:', error);
-    // Return mock success if database isn't connected in dev/preview environment
     return NextResponse.json({
       success: true,
       message: 'Database connection failed or not configured, returned mock status',
