@@ -11,7 +11,7 @@ const solanaConnectors = toSolanaWalletConnectors({
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   if (config.privy.isDummyAppId) {
-    return <>{children}</>;
+    return <div key="dummy-providers-wrapper">{children}</div>;
   }
 
   return (
@@ -41,7 +41,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      {children}
+      <div key="privy-providers-wrapper">{children}</div>
     </PrivyProvider>
   );
 }
