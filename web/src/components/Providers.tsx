@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
-import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
+import { toSolanaWalletConnectors, defaultSolanaRpcsPlugin } from '@privy-io/react-auth/solana';
 import { config } from '@/config';
 
 const solanaConnectors = toSolanaWalletConnectors({
@@ -25,6 +25,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           walletList: ['phantom', 'solflare', 'backpack'],
           walletChainType: 'solana-only',
         },
+        plugins: [defaultSolanaRpcsPlugin()],
         loginMethods: ['email', 'wallet', 'google', 'twitter', 'discord', 'apple', 'sms'],
         embeddedWallets: {
           ethereum: {
