@@ -17,13 +17,35 @@ function Dashboard() {
   const [saving, setSaving] = useState(false);
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  // Solana connection & wallet detection
-  const solanaWallet = wallets?.find((w) => w.walletClientType === 'solana') || user?.wallet;
+  // Strictly identify Solana wallet (base58 format, non 0x address)
+  const isSolanaAddress = (addr: string | undefined): boolean => {
+    if (!addr) return false;
+    return !addr.startsWith('0x') && addr.length >= 32 && addr.length <= 44;
+  };
+
+  const solanaWallet = wallets?.find(
+    (w) => (w.walletClientType === 'solana' || (w as any).chainType === 'solana') && isSolanaAddress(w.address)
+  ) || (user?.wallet && isSolanaAddress(user.wallet.address) ? user.wallet : null);
+
   const walletAddress = solanaWallet?.address;
+
+  // Explicit Solana Wallet Creation
+  const handleCreateSolanaWallet = async () => {
+    setCreating(true);
+    try {
+      await createWallet();
+    } catch (err) {
+      console.error('Erreur création wallet Solana:', err);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   // Fetch Solana Devnet Balance using global RPC URL
   const fetchBalance = useCallback(async (address: string) => {
+    if (!isSolanaAddress(address)) return;
     setLoadingBalance(true);
     try {
       const connection = new Connection(config.solana.rpcUrl, 'confirmed');
@@ -114,7 +136,7 @@ function Dashboard() {
             <div className="space-y-4">
               <div>
                 <label className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                  Adresse du Wallet
+                  Adresse du Wallet Solana (Base58)
                 </label>
                 <div className="mt-1 p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-indigo-300 break-all">
                   {walletAddress}
@@ -139,10 +161,11 @@ function Dashboard() {
                 Aucun portefeuille Solana associé pour le moment.
               </p>
               <button
-                onClick={() => createWallet()}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition"
+                onClick={handleCreateSolanaWallet}
+                disabled={creating}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
               >
-                Générer mon Portefeuille Solana
+                {creating ? 'Génération...' : 'Générer mon Portefeuille Solana'}
               </button>
             </div>
           )}

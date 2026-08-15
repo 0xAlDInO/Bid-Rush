@@ -22,8 +22,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           theme: 'dark',
           accentColor: '#676FFF',
           showWalletLoginFirst: true,
+          walletList: ['phantom', 'solflare', 'backpack'],
+          walletChainType: 'solana-only',
         },
-        loginMethods: ['email', 'wallet'],
+        loginMethods: ['email', 'wallet', 'google', 'twitter', 'discord', 'apple', 'sms'],
         embeddedWallets: {
           ethereum: {
             createOnLogin: 'off',
