@@ -1,0 +1,20 @@
+[package]
+name = "bid_rush"
+version = "0.1.0"
+description = "Smart Contract Anchor Solana pour la plateforme Bid-Rush"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "bid_rush"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.30.1"
