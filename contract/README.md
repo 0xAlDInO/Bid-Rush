@@ -56,8 +56,22 @@ anchor deploy
 
 ## 💡 Résolution des Problèmes Courants (Dépannage)
 
-### Erreur : `error: failed to parse lock file at: Cargo.lock` (lock file version 4 requires `-Znext-lockfile-bump`)
-Si vous obtenez cette erreur lors d'un `anchor build`, c'est parce qu'un fichier `Cargo.lock` a été généré par une version plus récente de Rust (`rustc 1.84+` ou `1.90+`) qui utilise le format v4 non supporté par la version de Rust intégrée au compilateur Solana (`solana-cargo-build-sbf`).
+### 1. Erreur : `feature edition2024 is required` / `failed to download block-buffer v0.12.1`
+Cette erreur se produit lorsque Cargo essaie de télécharger une version récente d'une sous-dépendance (comme `block-buffer v0.12.1`) ayant publié son manifeste avec l'édition Rust 2024 (non encore stabilisée dans le compilateur Rust/SBF actuel).
+
+**Solution :**
+Forcer Cargo à utiliser la version v0.10.5 de `block-buffer` compatible avec l'édition Rust 2021 :
+
+```bash
+cd contract
+cargo update -p block-buffer --precise 0.10.5
+anchor build
+```
+
+---
+
+### 2. Erreur : `error: failed to parse lock file at: Cargo.lock` (lock file version 4 requires `-Znext-lockfile-bump`)
+Si vous obtenez cette erreur lors d'un `anchor build`, c'est parce qu'un fichier `Cargo.lock` a été généré par une version plus récente de Rust (`rustc 1.84+` ou `1.97+`) qui utilise le format v4 non supporté par le compilateur Solana SBF.
 
 **Solution :**
 Supprimez le fichier `Cargo.lock` temporaire avant de lancer la compilation Anchor :
