@@ -9,14 +9,12 @@ Ce dossier contient le contrat intelligent (Smart Contract) Solana de la platefo
 ```
 contract/
 ├── Anchor.toml               # Configuration Anchor (Cluster Devnet/Localnet)
-├── Cargo.toml                # Configuration du workspace Rust
+├── Cargo.toml                # Fichier Cargo unique (racine du contrat)
 ├── .gitignore                # Fichiers ignorés (target, Cargo.lock, node_modules)
 ├── package.json              # Script de tests TypeScript
 ├── programs/
-│   └── bid_rush/
-│       ├── Cargo.toml        # Dépendances du programme Rust (anchor-lang)
-│       └── src/
-│           └── lib.rs        # Code source du Smart Contract Rust Anchor
+│   └── src/
+│       └── lib.rs            # Code source Rust Anchor (`bid_rush`)
 └── tests/
     └── bid_rush.ts           # Tests d'intégration Anchor en TypeScript
 ```
@@ -27,7 +25,7 @@ contract/
 
 Pour compiler et déployer le contrat Anchor sur Solana :
 
-1. **Rust :** [https://rustup.rs/](https://rustup.rs/) (`rustc >= 1.75`)
+1. **Rust :** [https://rustup.rs/](https://rustup.rs/) (`rustc 1.79.0`)
 2. **Solana CLI :** [https://docs.solana.com/cli/install-solana-cli-tools](https://docs.solana.com/cli/install-solana-cli-tools) (`solana-cli 1.18.x`)
 3. **Anchor CLI :** [https://www.anchor-lang.com/docs/installation](https://www.anchor-lang.com/docs/installation) (`anchor-cli 0.30.1`)
 
