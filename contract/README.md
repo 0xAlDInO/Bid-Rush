@@ -40,6 +40,7 @@ Pour compiler et déployer le contrat Anchor sur Solana :
 cd contract
 cargo update -p block-buffer --precise 0.10.5
 cargo update -p zeroize_derive --precise 1.4.2
+cargo update -p toml_datetime --precise 0.6.8
 ```
 
 ### 2. Compiler le programme Rust
@@ -63,15 +64,16 @@ anchor deploy
 
 ## 💡 Résolution des Problèmes Courants (Dépannage)
 
-### 1. Erreur : `feature edition2024 is required` / `failed to download zeroize_derive v1.5.0` ou `block-buffer v0.12.1`
-Cette erreur se produit lorsque Cargo télécharge les toutes dernières versions de sous-dépendances (`zeroize_derive v1.5.0` ou `block-buffer v0.12.1`) qui ont migré vers l'édition Rust 2024.
+### 1. Erreur : `feature edition2024 is required` (`toml_datetime`, `zeroize_derive`, `block-buffer`)
+Cette erreur se produit lorsque Cargo télécharge les toutes dernières versions de sous-dépendances (`toml_datetime v1.1.1`, `zeroize_derive v1.5.0` ou `block-buffer v0.12.1`) qui ont migré vers l'édition Rust 2024 (non supportée par Rust 1.79.0).
 
 **Solution :**
-Exécutez ces deux commandes dans le dossier `contract/` pour verrouiller ces packages sur leurs versions v2021 :
+Exécutez ces commandes dans le dossier `contract/` pour verrouiller ces packages sur leurs versions compatibles Rust 2021 :
 ```bash
 cd contract
 cargo update -p block-buffer --precise 0.10.5
 cargo update -p zeroize_derive --precise 1.4.2
+cargo update -p toml_datetime --precise 0.6.8
 anchor build
 ```
 
