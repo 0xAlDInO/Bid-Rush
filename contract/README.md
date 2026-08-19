@@ -56,14 +56,15 @@ anchor deploy
 
 ## 💡 Résolution des Problèmes Courants (Dépannage)
 
-### 1. Erreur : `feature edition2024 is required` / `failed to download block-buffer v0.12.1`
-Cette erreur se produit lorsque Cargo essaie de télécharger une version récente d'une sous-dépendance (comme `block-buffer v0.12.1`) ayant publié son manifeste avec l'édition Rust 2024 (non encore stabilisée dans le compilateur Rust/SBF actuel).
+### 1. Erreur : `feature edition2024 is required` / `failed to download zeroize_derive v1.5.0` ou `block-buffer v0.12.1`
+Cette erreur se produit lorsque Cargo télécharge automatiquement les toutes dernières versions de sous-dépendances (`zeroize_derive v1.5.0` ou `block-buffer v0.12.1`) qui ont migré vers l'édition Rust 2024 (non encore stabilisée dans le compilateur Rust/SBF 1.79).
 
 **Solution :**
-Forcer Cargo à utiliser la version v0.10.5 de `block-buffer` compatible avec l'édition Rust 2021 :
+Exécutez la commande suivante dans le dossier `contract/` pour forcer Cargo à bloquer ces dépendances sur les versions v1.4.2 et v0.10.5 compatibles avec l'édition Rust 2021 :
 
 ```bash
 cd contract
+cargo update -p zeroize_derive --precise 1.4.2
 cargo update -p block-buffer --precise 0.10.5
 anchor build
 ```
