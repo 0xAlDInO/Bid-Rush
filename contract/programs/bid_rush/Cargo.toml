@@ -18,8 +18,3 @@ idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
 anchor-lang = "0.30.1"
-
-[patch.crates-io]
-block-buffer = { git = "https://github.com/RustCrypto/utils.git", rev = "block-buffer-v0.10.5" }
-zeroize_derive = { git = "https://github.com/RustCrypto/utils.git", rev = "zeroize_derive-v1.4.2" }
-zeroize = { git = "https://github.com/RustCrypto/utils.git", rev = "zeroize-v1.8.1" }

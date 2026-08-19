@@ -12,8 +12,3 @@ codegen-units = 1
 opt-level = 3
 incremental = false
 codegen-units = 1
-
-[patch.crates-io]
-block-buffer = { git = "https://github.com/RustCrypto/utils.git", rev = "block-buffer-v0.10.5" }
-zeroize_derive = { git = "https://github.com/RustCrypto/utils.git", rev = "zeroize_derive-v1.4.2" }
-zeroize = { git = "https://github.com/RustCrypto/utils.git", rev = "zeroize-v1.8.1" }
